@@ -2,6 +2,11 @@ import numpy as np
 import pickle
 import random
 import os
+import nltk
+
+# Download NLTK data at startup (needed for cloud deployment)
+nltk.download('stopwords', quiet=True)
+
 os.environ["TF_USE_LEGACY_KERAS"] = "1"
 from tf_keras.models import load_model
 from tf_keras.preprocessing.sequence import pad_sequences
