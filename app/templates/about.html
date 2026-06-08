@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+<div class="container mt-4">
+    <h2 class="text-center text-primary">Student Feedback Sentiment Analysis</h2>
+    <p class="text-center">This project helps analyze student feedback using AI-driven sentiment analysis, providing valuable insights for teachers.</p>
+
+    <!-- Project Overview -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">📌 Project Overview</h5>
+                    <p class="card-text">
+                        This system analyzes student feedback using deep learning models (BiLSTM, CNN, and CNN-LSTM) to predict emotions and provide suggestions for teachers.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-success">🛠 Implementation</h5>
+                    <p class="card-text">
+                        The project is built using Flask, TensorFlow, and NLP techniques, with a simple web interface to collect feedback and display results from three different models.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">📊 Sentiment Analysis</h5>
+                    <p class="card-text">
+                        The system categorizes feedback into emotions like joy, sadness, frustration, or confidence, offering personalized recommendations for improving teaching.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Implementation Process -->
+    <h3 class="mt-5 text-center text-info">🚀 Implementation Process</h3>
+    <div class="row mt-3">
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title">📄 Step 1: Data Collection</h6>
+                    <p class="card-text">Student feedback is collected and preprocessed using NLP techniques such as tokenization, stemming, and stopword removal.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title">🤖 Step 2: Model Training</h6>
+                    <p class="card-text">We train three deep learning models (BiLSTM, CNN, CNN-LSTM) using labeled datasets to classify sentiments accurately.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title">🔎 Step 3: Prediction</h6>
+                    <p class="card-text">User feedback is analyzed by all three models, and the sentiment category (e.g., motivated, struggling) is predicted.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title">💡 Step 4: Recommendation</h6>
+                    <p class="card-text">Based on sentiment analysis, the system suggests tailored improvements for teaching and student engagement.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <h3 class="mt-5 text-center text-warning">🔥 Key Features</h3>
+    <div class="row mt-3">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title">💬 AI-Powered Sentiment Analysis</h6>
+                    <p class="card-text">Uses deep learning to classify student feedback into different emotions.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title">📊 Multi-Model Prediction</h6>
+                    <p class="card-text">Displays results from three models (BiLSTM, CNN, CNN-LSTM) for comparison.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title">📈 Teacher Recommendations</h6>
+                    <p class="card-text">Provides actionable insights to help teachers improve classroom engagement.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="text-center mt-5">
+        <h4 class="text-primary">Try It Now! 🚀</h4>
+        <p>Click below to test the sentiment analysis system with your own feedback.</p>
+        <a href="{{ url_for('predict') }}" class="btn btn-success btn-lg">Go to Prediction</a>
+    </div>
+</div>
+{% endblock %}

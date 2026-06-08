@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+<div class="container mt-5">
+    <h2 class="text-center text-primary">🔍 Feedback Sentiment Analysis</h2>
+    <p class="text-center text-muted">Analyze student feedback using AI-powered sentiment prediction models.</p>
+
+    <!-- Feedback Form -->
+    <div class="card shadow-lg p-4 mt-4">
+        <h4 class="text-center text-success">💬 Enter Your Feedback</h4>
+        <form method="post">
+            <div class="mb-3">
+                <label for="comment" class="form-label">Your Feedback:</label>
+                <textarea id="comment" name="comment" class="form-control" rows="4" required placeholder="Type your feedback here..."></textarea>
+            </div>
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary btn-lg">Analyze Sentiment</button>
+            </div>
+        </form>
+    </div>
+
+    {% if comment %}
+    <div class="mt-5">
+        <h3 class="text-center text-info">📢 Your Feedback:</h3>
+        <div class="alert alert-warning text-center" role="alert">
+            <strong>{{ comment }}</strong>
+        </div>
+
+        <h3 class="text-center text-success">Teacher Dashboard</h3>
+        <div class="row mt-4">
+            {% for model, result in results.items() %}
+            <div class="col-md-4">
+                <div class="card shadow-lg border-0 text-center p-3">
+                    <h4 class="text-primary">{{ model }} Model</h4>
+                    <p class="fw-bold text-dark">🔹 <strong>Emotion:</strong> <span class="text-success">{{ result.Emotion }}</span></p>
+                    <p class="fw-bold text-dark">📝 <strong>Recommendation:</strong> <span class="text-secondary">{{ result.Recommendation }}</span></p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
