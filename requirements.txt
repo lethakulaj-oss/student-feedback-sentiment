@@ -1,5 +1,5 @@
 flask==3.0.3
-tensorflow==2.16.2
+tensorflow-cpu==2.16.2
 tf-keras==2.16.0
 nltk==3.9.1
 numpy==1.26.4
