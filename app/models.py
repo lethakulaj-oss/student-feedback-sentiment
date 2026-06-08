@@ -9,9 +9,8 @@ import types
 
 os.environ["TF_USE_LEGACY_KERAS"] = "1"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Force CPU only
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-# Hardcoded English stopwords
 ENGLISH_STOPWORDS = {
     "i","me","my","myself","we","our","ours","ourselves","you","your","yours",
     "yourself","yourselves","he","him","his","himself","she","her","hers",
@@ -32,13 +31,13 @@ ENGLISH_STOPWORDS = {
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-_model = None
+_models = None
 _tokenizer = None
 _label_encoder = None
 
 def _load_resources():
-    global _model, _tokenizer, _label_encoder
-    if _model is not None:
+    global _models, _tokenizer, _label_encoder
+    if _models is not None:
         return
 
     from tf_keras.models import load_model
@@ -62,9 +61,11 @@ def _load_resources():
     with open(label_encoder_path, 'rb') as f:
         _label_encoder = pickle.load(f)
 
-    # Load only CNN-LSTM model to save memory
-    _model = load_model(os.path.join(BASE_DIR, '../model/cnn_lstm_model.h5'))
-
+    _models = {
+        "BiLSTM": load_model(os.path.join(BASE_DIR, '../model/bilstm_model.h5')),
+        "CNN": load_model(os.path.join(BASE_DIR, '../model/cnn_model.h5')),
+        "CNN-LSTM": load_model(os.path.join(BASE_DIR, '../model/cnn_lstm_model.h5')),
+    }
 
 label_mapping = {
     "neutral": "Focused", "joy": "Cheerful", "sadness": "Struggling",
@@ -105,24 +106,19 @@ def preprocess_input_text(text):
 
 def predict_with_recommendations(text):
     from tf_keras.preprocessing.sequence import pad_sequences
-
     _load_resources()
 
     preprocessed_text = preprocess_input_text(text)
     sequence = _tokenizer.texts_to_sequences([preprocessed_text])
     padded_sequence = pad_sequences(sequence, maxlen=100)
 
-    pred_prob = _model.predict(padded_sequence)
-    pred_class = np.argmax(pred_prob, axis=1)
-    original_label = _label_encoder.inverse_transform(pred_class)[0]
-    updated_label = label_mapping.get(original_label, original_label)
-
-    # Show same result under all 3 model names for UI compatibility
-    recommendation = random.choice(recommendations.get(updated_label, ["No recommendation available"]))
-    results = {
-        "BiLSTM": {"Emotion": updated_label, "Recommendation": random.choice(recommendations.get(updated_label, ["No recommendation available"]))},
-        "CNN": {"Emotion": updated_label, "Recommendation": random.choice(recommendations.get(updated_label, ["No recommendation available"]))},
-        "CNN-LSTM": {"Emotion": updated_label, "Recommendation": recommendation}
-    }
+    results = {}
+    for model_name, model in _models.items():
+        pred_prob = model.predict(padded_sequence, verbose=0)
+        pred_class = np.argmax(pred_prob, axis=1)
+        original_label = _label_encoder.inverse_transform(pred_class)[0]
+        updated_label = label_mapping.get(original_label, original_label)
+        recommendation = random.choice(recommendations.get(updated_label, ["No recommendation available"]))
+        results[model_name] = {"Emotion": updated_label, "Recommendation": recommendation}
 
     return results
