@@ -1,5 +1,8 @@
 import nltk
-nltk.download('stopwords', quiet=True)
+import os
+
+# Use bundled NLTK data shipped with the app
+nltk.data.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'nltk_data'))
 
 from flask import Flask
 
