@@ -2,20 +2,33 @@ import numpy as np
 import pickle
 import random
 import os
-import nltk
-
-# Download NLTK data at startup (needed for cloud deployment)
-nltk.download('stopwords', quiet=True)
-
 os.environ["TF_USE_LEGACY_KERAS"] = "1"
 from tf_keras.models import load_model
 from tf_keras.preprocessing.sequence import pad_sequences
-from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
 import re
 import string
+import sys
+import types
 
-import os
+# Hardcoded English stopwords — no NLTK download needed
+ENGLISH_STOPWORDS = {
+    "i","me","my","myself","we","our","ours","ourselves","you","your","yours",
+    "yourself","yourselves","he","him","his","himself","she","her","hers",
+    "herself","it","its","itself","they","them","their","theirs","themselves",
+    "what","which","who","whom","this","that","these","those","am","is","are",
+    "was","were","be","been","being","have","has","had","having","do","does",
+    "did","doing","a","an","the","and","but","if","or","because","as","until",
+    "while","of","at","by","for","with","about","against","between","into",
+    "through","during","before","after","above","below","to","from","up","down",
+    "in","out","on","off","over","under","again","further","then","once","here",
+    "there","when","where","why","how","all","both","each","few","more","most",
+    "other","some","such","no","nor","not","only","own","same","so","than",
+    "too","very","s","t","can","will","just","don","should","now","d","ll",
+    "m","o","re","ve","y","ain","aren","couldn","didn","doesn","hadn","hasn",
+    "haven","isn","ma","mightn","mustn","needn","shan","shouldn","wasn",
+    "weren","won","wouldn"
+}
 
 # Get the absolute path of the project directory
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -34,10 +47,8 @@ cnn_lstm_model = load_model(cnn_lstm_model_path)
 tokenizer_path = os.path.join(BASE_DIR, '../model/tokenizer.pkl')
 label_encoder_path = os.path.join(BASE_DIR, '../model/label_encoder.pkl')
 
-import sys
 import tf_keras.preprocessing.text as _kpt
 # Patch old keras module paths so legacy pickled tokenizers load correctly
-import types
 _keras_compat = types.ModuleType("keras")
 _keras_preprocessing = types.ModuleType("keras.preprocessing")
 _keras_preprocessing_text = types.ModuleType("keras.preprocessing.text")
@@ -48,7 +59,6 @@ sys.modules.setdefault("keras", _keras_compat)
 sys.modules["keras.preprocessing"] = _keras_preprocessing
 sys.modules["keras.preprocessing.text"] = _keras_preprocessing_text
 
-import pickle
 with open(tokenizer_path, 'rb') as f:
     tokenizer = pickle.load(f)
 
@@ -95,14 +105,13 @@ recommendations = {
 
 def preprocess_input_text(text):
     stemmer = SnowballStemmer("english")
-    stop_words = set(stopwords.words("english"))
 
     text = text.lower()
     text = re.sub(r'https?://\S+|www\.\S+', '', text)
     text = re.sub(r'<.*?>+', '', text)
     text = re.sub(rf"[{string.punctuation}]", '', text)
     text = re.sub(r'\w*\d\w*', '', text)
-    text = ' '.join(stemmer.stem(word) for word in text.split() if word not in stop_words)
+    text = ' '.join(stemmer.stem(word) for word in text.split() if word not in ENGLISH_STOPWORDS)
     return text
 
 def predict_with_recommendations(text):
@@ -123,7 +132,7 @@ def predict_with_recommendations(text):
         original_label = label_encoder.inverse_transform(pred_class)[0]
         updated_label = label_mapping.get(original_label, original_label)
         recommendation = random.choice(recommendations.get(updated_label, ["No recommendation available"]))
-        
+
         results[model_name] = {
             "Emotion": updated_label,
             "Recommendation": recommendation
