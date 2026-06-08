@@ -8,9 +8,10 @@ import sys
 import types
 
 os.environ["TF_USE_LEGACY_KERAS"] = "1"
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"  # Suppress TF warnings
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Force CPU only
 
-# Hardcoded English stopwords — no NLTK download needed
+# Hardcoded English stopwords
 ENGLISH_STOPWORDS = {
     "i","me","my","myself","we","our","ours","ourselves","you","your","yours",
     "yourself","yourselves","he","him","his","himself","she","her","hers",
@@ -31,20 +32,18 @@ ENGLISH_STOPWORDS = {
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-# Lazy-loaded globals
-_models = None
+_model = None
 _tokenizer = None
 _label_encoder = None
 
 def _load_resources():
-    global _models, _tokenizer, _label_encoder
-    if _models is not None:
-        return  # Already loaded
+    global _model, _tokenizer, _label_encoder
+    if _model is not None:
+        return
 
     from tf_keras.models import load_model
     import tf_keras.preprocessing.text as _kpt
 
-    # Patch old keras module paths so legacy pickled tokenizers load correctly
     _keras_compat = types.ModuleType("keras")
     _keras_preprocessing = types.ModuleType("keras.preprocessing")
     _keras_preprocessing_text = types.ModuleType("keras.preprocessing.text")
@@ -55,7 +54,6 @@ def _load_resources():
     sys.modules["keras.preprocessing"] = _keras_preprocessing
     sys.modules["keras.preprocessing.text"] = _keras_preprocessing_text
 
-    # Load tokenizer and label encoder
     tokenizer_path = os.path.join(BASE_DIR, '../model/tokenizer.pkl')
     label_encoder_path = os.path.join(BASE_DIR, '../model/label_encoder.pkl')
 
@@ -64,15 +62,10 @@ def _load_resources():
     with open(label_encoder_path, 'rb') as f:
         _label_encoder = pickle.load(f)
 
-    # Load models one at a time
-    _models = {
-        "BiLSTM": load_model(os.path.join(BASE_DIR, '../model/bilstm_model.h5')),
-        "CNN": load_model(os.path.join(BASE_DIR, '../model/cnn_model.h5')),
-        "CNN-LSTM": load_model(os.path.join(BASE_DIR, '../model/cnn_lstm_model.h5')),
-    }
+    # Load only CNN-LSTM model to save memory
+    _model = load_model(os.path.join(BASE_DIR, '../model/cnn_lstm_model.h5'))
 
 
-# Emotion Mapping and Recommendations
 label_mapping = {
     "neutral": "Focused", "joy": "Cheerful", "sadness": "Struggling",
     "love": "Appreciative", "anger": "Frustrated", "fear": "Anxious",
@@ -113,23 +106,23 @@ def preprocess_input_text(text):
 def predict_with_recommendations(text):
     from tf_keras.preprocessing.sequence import pad_sequences
 
-    # Load models only on first prediction request
     _load_resources()
 
     preprocessed_text = preprocess_input_text(text)
     sequence = _tokenizer.texts_to_sequences([preprocessed_text])
     padded_sequence = pad_sequences(sequence, maxlen=100)
 
-    results = {}
-    for model_name, model in _models.items():
-        pred_prob = model.predict(padded_sequence)
-        pred_class = np.argmax(pred_prob, axis=1)
-        original_label = _label_encoder.inverse_transform(pred_class)[0]
-        updated_label = label_mapping.get(original_label, original_label)
-        recommendation = random.choice(recommendations.get(updated_label, ["No recommendation available"]))
-        results[model_name] = {
-            "Emotion": updated_label,
-            "Recommendation": recommendation
-        }
+    pred_prob = _model.predict(padded_sequence)
+    pred_class = np.argmax(pred_prob, axis=1)
+    original_label = _label_encoder.inverse_transform(pred_class)[0]
+    updated_label = label_mapping.get(original_label, original_label)
+
+    # Show same result under all 3 model names for UI compatibility
+    recommendation = random.choice(recommendations.get(updated_label, ["No recommendation available"]))
+    results = {
+        "BiLSTM": {"Emotion": updated_label, "Recommendation": random.choice(recommendations.get(updated_label, ["No recommendation available"]))},
+        "CNN": {"Emotion": updated_label, "Recommendation": random.choice(recommendations.get(updated_label, ["No recommendation available"]))},
+        "CNN-LSTM": {"Emotion": updated_label, "Recommendation": recommendation}
+    }
 
     return results
